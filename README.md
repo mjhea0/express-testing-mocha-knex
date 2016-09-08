@@ -557,7 +557,16 @@ Code:
 
 ## What's next?
 
+### 9am to 11am
+
+1. Finalize 
 1. Unit tests
-1. Edge Cases
-1. Validation
-1. Refactoring
+1. Edge Cases - faker.js
+
+## 12pm to 2pm
+
+1. Validation - advanced validation
+1. Refactoring - modular
+1. Migrations - new migration
+1. Unit Testing advanced joins (post to multiple resources)
+1. Workflow
