@@ -559,7 +559,7 @@ Code:
 
 ### 9am to 11am
 
-1. Finalize 
+1. Finalize POST, PUT, DELETE
 1. Unit tests
 1. Edge Cases - faker.js
 
