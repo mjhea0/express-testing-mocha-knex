@@ -116,7 +116,7 @@ module.exports = require('knex')(config);
 
 The database connection is establish by passing the proper environment to *knexfile.js* which returns the associated object that gets passed to the `knex` library in the third line above.
 
-> Now is a great time to initilize a new git repo!
+> Now is a great time to initilize a new git repo and commit!
 
 ### Test Structure
 
@@ -128,15 +128,43 @@ Run the tests:
 $ npm test
 ```
 
-They both should pass!
+They all should pass:
 
 ```sh
+jscs
+  ✓ should pass for working directory (357ms)
 
+routes : index
+  GET /
+    ✓ should render the index (88ms)
+  GET /404
+    ✓ should throw an error
+
+jshint
+  ✓ should pass for working directory (247ms)
+
+controllers : index
+  sum()
+    ✓ should return a total
+    ✓ should return an error
+
+
+6 passing (724ms)
 ```
+
+Glance at the sample tests. Notice how we are updating the environment variable at the top of each test:
+
+```javascript
+process.env.NODE_ENV = 'test';
+```
+
+Remember what this does? Now, when we run the tests, knex is intilized with the `test` config. 
 
 With that, let's start writing some code...
 
+## Test Driven Development
 
+Talk about workflow
 
 5. GET ALL:
     - Write test
