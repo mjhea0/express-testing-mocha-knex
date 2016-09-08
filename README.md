@@ -158,7 +158,12 @@ Glance at the sample tests. Notice how we are updating the environment variable 
 process.env.NODE_ENV = 'test';
 ```
 
-Remember what this does? Now, when we run the tests, knex is intilized with the `test` config. 
+Remember what this does? Now, when we run the tests, knex is intilized with the `test` config.
+
+### Schema Migrations
+
+placeholder
+
 
 With that, let's start writing some code...
 
