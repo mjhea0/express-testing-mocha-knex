@@ -4,6 +4,10 @@ This tutorial looks at how to test an [Express](https://expressjs.com/) CRUD app
 
 Let's get to it!
 
+## Objectives
+
+By the end of this tutorial, you will be able to...
+
 ## Why Test?
 
 Are you currently manually testing your app?
@@ -561,12 +565,21 @@ Code:
 
 1. Finalize POST, PUT, DELETE
 1. Unit tests
+  - add a controller
+  - write a test
+  - write the code
 1. Edge Cases - faker.js
+  - let's write some fixtures!
 
 ## 12pm to 2pm
 
-1. Validation - advanced validation
-1. Refactoring - modular
-1. Migrations - new migration
-1. Unit Testing advanced joins (post to multiple resources)
-1. Workflow
+1. Validation
+  - advanced validation w/ https://github.com/ctavan/express-validator
+1. Refactoring
+  - making it modular w/ https://github.com/vitaly-t/pg-promise-demo
+  - move logic to controller
+  - add queries file
+1. Migrations
+  - updating the schema
+1. CI
+  - Run your tests on save w/ Gulp
