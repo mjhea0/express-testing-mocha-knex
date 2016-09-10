@@ -10,6 +10,7 @@
   const flash = require('connect-flash');
   const morgan = require('morgan');
   const nunjucks = require('nunjucks');
+  const expressValidator = require('express-validator');
 
   // *** view folders *** //
   const viewFolders = [
@@ -35,6 +36,7 @@
     app.use(cookieParser());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(expressValidator());
     // // uncomment if using express-session
     // app.use(session({
     //   secret: process.env.SECRET_KEY,

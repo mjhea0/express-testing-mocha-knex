@@ -79,6 +79,16 @@ describe('routes : users', () => {
         done();
       });
     });
+    it('should throw an error if the user id is null', (done) => {
+      chai.request(server)
+      .get(`/api/v1/users/${null}`)
+      .end((err, res) => {
+        res.status.should.equal(400);
+        res.body.message.should.eql('Validation failed');
+        res.body.failures.length.should.eql(1);
+        done();
+      });
+    });
   });
 
   describe('POST /api/v1/users', () => {
@@ -106,6 +116,29 @@ describe('routes : users', () => {
           'id', 'username', 'email', 'created_at'
         );
         done();
+      });
+    });
+    it('should throw an error when a username is not provided', (done) => {
+      chai.request(server)
+      .post('/api/v1/users')
+      .send({
+        username: null,
+        email: '111111'
+      })
+      .end((err, res) => {
+        res.status.should.equal(400);
+        res.body.message.should.eql('Validation failed');
+        res.body.failures.length.should.eql(2);
+        // ensure the user was not added
+        knex('users')
+        .select('*')
+        .where({
+          email: '111111'
+        })
+        .then((user) => {
+          user.length.should.eql(0);
+          done();
+        });
       });
     });
   });

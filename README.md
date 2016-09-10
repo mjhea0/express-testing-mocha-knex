@@ -732,11 +732,15 @@ router.delete('/:id', (req, res, next) => {
 });
 ```
 
+Run all your tests. All should pass.
+
+Keep in mind that we are not running any tests to handle errors. For examples, what happens if you pass an invalid email into the POST request? Or if you provide an invalid ID to the PUT request. Think about edge cases. Then write tests. Do this on your own.
+
 ## Unit Tests
 
 New business requirement!
 
-Add a route to return all users created after a certain date. Let's add a helper function to eliminate unnecessary code in the route handler.
+We need a route to return all users created after a certain date. Since we already know how to write routes, let's add a helper function that takes an array of users and a year that then returns an array of users created on or after the specified date. We can then use this function in a future route handler.
 
 Steps:
 
@@ -799,7 +803,17 @@ it('should return all users created on or after (>=) specified year',
 });
 ```
 
-What's happening?
+#### What's happening?
+
+Within the `it` block we passed in the `userArray`, a year, and a callback function to a function called `filterByYear`. This then asserts that a error does not exist and that the length of the response (`total`) is 2.
+
+Run the tests. Watch them fail.
+
+Now, let's add the code!
+
+### Write the code to pass the unit test
+
+Blah
 
 ## Fixture
 
@@ -810,15 +824,18 @@ What's happening?
 
 npm install faker@3.1.0 --save-dev
 
-## 12pm to 2pm
+## Validation
 
-1. Validation
-  - advanced validation w/ https://github.com/ctavan/express-validator
+npm install express-validator@2.20.8 --save
+
+const expressValidator = require('express-validator');
+
+app.use(expressValidator([options]));
+
+
 1. Refactoring
   - making it modular w/ https://github.com/vitaly-t/pg-promise-demo
-  - move logic to controller
+  - move knex logic to controller
+  - move validation to the controller
   - add queries file
-1. Migrations
-  - updating the schema
-1. CI
-  - Run your tests on save w/ Gulp
+  

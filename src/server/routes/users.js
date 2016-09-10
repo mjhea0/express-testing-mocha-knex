@@ -1,119 +1,102 @@
 const express = require('express');
 const router = express.Router();
 
-const knex = require('../db/knex');
+const userQueries = require('../db/queries.users');
+const validate = require('./validation');
 
 // *** GET ALL users *** //
 router.get('/', (req, res, next) => {
-  knex('users').select('*')
-  .then((users) => {
-    res.status(200).json({
-      status: 'success',
-      data: users
-    });
-  })
-  .catch((err) => {
-    res.status(500).json({
-      status: 'error',
-      data: err
-    });
+  userQueries.getAllUsers((err, users) => {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: users
+      });
+    }
   });
 });
 
 // *** GET SINGLE user *** //
-router.get('/:id', (req, res, next) => {
+router.get('/:id', validate, (req, res, next) => {
   const userID = parseInt(req.params.id);
-  knex('users')
-  .select('*')
-  .where({
-    id: userID
-  })
-  .then((users) => {
-    res.status(200).json({
-      status: 'success',
-      data: users
-    });
-  })
-  .catch((err) => {
-    res.status(500).json({
-      status: 'error',
-      data: err
-    });
+  userQueries.getSingleUser(userID, (err, users) => {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: users
+      });
+    }
   });
 });
 
 // *** add a user *** //
-router.post('/', (req, res, next) => {
-  const newUsername = req.body.username;
-  const newEmail = req.body.email;
-  knex('users')
-  .insert({
-    username: newUsername,
-    email: newEmail
-  })
-  .returning('*')
-  .then((user) => {
-    res.status(201).json({
-      status: 'success',
-      data: user
-    });
-  })
-  .catch((err) => {
-    res.status(500).json({
-      status: 'error',
-      data: err
-    });
+router.post('/', validate, (req, res, next) => {
+  const userObject = {
+    username: req.body.username,
+    email: req.body.email
+  };
+  userQueries.addUser(userObject, (err, users) => {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(201).json({
+        status: 'success',
+        data: users
+      });
+    }
   });
 });
 
 // *** update a user *** //
-router.put('/:id', (req, res, next) => {
+router.put('/:id', validate, (req, res, next) => {
   const userID = parseInt(req.params.id);
-  const updatedUsername = req.body.username;
-  const updatedEmail = req.body.email;
-  knex('users')
-  .update({
-    username: updatedUsername,
-    email: updatedEmail
-  })
-  .where({
-    id: userID
-  })
-  .returning('*')
-  .then((user) => {
-    res.status(200).json({
-      status: 'success',
-      data: user
-    });
-  })
-  .catch((err) => {
-    res.status(500).json({
-      status: 'error',
-      data: err
-    });
+  const userObject = {
+    username: req.body.username,
+    email: req.body.email
+  };
+  userQueries.updateUser(userID, userObject, (err, users) => {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: users
+      });
+    }
   });
 });
 
 // *** delete a user *** //
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', validate, (req, res, next) => {
   const userID = parseInt(req.params.id);
-  knex('users')
-  .del()
-  .where({
-    id: userID
-  })
-  .returning('*')
-  .then((user) => {
-    res.status(200).json({
-      status: 'success',
-      data: user
-    });
-  })
-  .catch((err) => {
-    res.status(500).json({
-      status: 'error',
-      data: err
-    });
+  userQueries.deleteUser(userID, (err, users) => {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: users
+      });
+    }
   });
 });
 
