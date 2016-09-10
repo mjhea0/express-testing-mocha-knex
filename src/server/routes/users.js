@@ -59,7 +59,6 @@ router.post('/', (req, res, next) => {
     });
   })
   .catch((err) => {
-    console.log(err);
     res.status(500).json({
       status: 'error',
       data: err
@@ -88,7 +87,29 @@ router.put('/:id', (req, res, next) => {
     });
   })
   .catch((err) => {
-    console.log(err);
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+
+// *** delete a user *** //
+router.delete('/:id', (req, res, next) => {
+  const userID = parseInt(req.params.id);
+  knex('users')
+  .del()
+  .where({
+    id: userID
+  })
+  .returning('*')
+  .then((user) => {
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) => {
     res.status(500).json({
       status: 'error',
       data: err

@@ -578,7 +578,6 @@ router.post('/', (req, res, next) => {
     });
   })
   .catch((err) => {
-    console.log(err);
     res.status(500).json({
       status: 'error',
       data: err
@@ -592,11 +591,77 @@ router.post('/', (req, res, next) => {
 Test:
 
 ```javascript
+describe('PUT /api/v1/users', () => {
+  it('should respond with a success message along with a single user that was updated', (done) => {
+    knex('users')
+    .select('*')
+    .then((user) => {
+      const userObject = user[0];
+      chai.request(server)
+      .put(`/api/v1/users/${userObject.id}`)
+      .send({
+        username: 'updatedUser',
+        email: 'updated@user.com'
+      })
+      .end((err, res) => {
+        // there should be no errors
+        should.not.exist(err);
+        // there should be a 200 status code
+        res.status.should.equal(200);
+        // the response should be JSON
+        res.type.should.equal('application/json');
+        // the JSON response body should have a
+        // key-value pair of {"status": "success"}
+        res.body.status.should.eql('success');
+        // the JSON response body should have a
+        // key-value pair of {"data": 1 user object}
+        res.body.data[0].should.include.keys(
+          'id', 'username', 'email', 'created_at'
+        );
+        // ensure the user was in fact updated
+        var newUserObject = res.body.data[0];
+        newUserObject.username.should.not.eql(userObject.username);
+        newUserObject.email.should.not.eql(userObject.email);
+        // redundant
+        newUserObject.username.should.eql('updatedUser');
+        newUserObject.email.should.eql('updated@user.com');
+        done();
+      });
+    });
+  });
+});
 ```
 
 Code:
 
 ```javascript
+// *** update a user *** //
+router.put('/:id', (req, res, next) => {
+  const userID = parseInt(req.params.id);
+  const updatedUsername = req.body.username;
+  const updatedEmail = req.body.email;
+  knex('users')
+  .update({
+    username: updatedUsername,
+    email: updatedEmail
+  })
+  .where({
+    id: userID
+  })
+  .returning('*')
+  .then((user) => {
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) => {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
 ```
 
 ### DELETE
@@ -604,29 +669,89 @@ Code:
 Test:
 
 ```javascript
+describe('DELETE /api/v1/users/:id', () => {
+  it('should respond with a success message along with a single user that was deleted', (done) => {
+    knex('users')
+    .select('*')
+    .then((users) => {
+      const userObject = users[0];
+      const lengthBeforeDelete = users.length;
+      chai.request(server)
+      .delete(`/api/v1/users/${userObject.id}`)
+      .end((err, res) => {
+        // there should be no errors
+        should.not.exist(err);
+        // there should be a 200 status code
+        res.status.should.equal(200);
+        // the response should be JSON
+        res.type.should.equal('application/json');
+        // the JSON response body should have a
+        // key-value pair of {"status": "success"}
+        res.body.status.should.eql('success');
+        // the JSON response body should have a
+        // key-value pair of {"data": 1 user object}
+        res.body.data[0].should.include.keys(
+          'id', 'username', 'email', 'created_at'
+        );
+        // ensure the user was in fact deleted
+        knex('users').select('*')
+        .then((updatedUsers) => {
+          updatedUsers.length.should.eql(lengthBeforeDelete - 1);
+          done();
+        });
+      });
+    });
+  });
+});
 ```
 
 Code:
 
 ```javascript
+// *** delete a user *** //
+router.delete('/:id', (req, res, next) => {
+  const userID = parseInt(req.params.id);
+  knex('users')
+  .del()
+  .where({
+    id: userID
+  })
+  .returning('*')
+  .then((user) => {
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) => {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
 ```
 
 ## Unit Tests
 
 New business requirement!
 
+Add a route to return all users created after a certain date. Let's add a helper function to eliminate unnecessary code in the route handler.
 
+Steps:
 
-### 9am to 11am
+1. Write the integration test
+1. Run the tests
+1. Write a unit test
+1. Run the tests
+1. Write the code to pass the unit test
+1. Run the tests
 
-1. Finalize POST, PUT, DELETE
-1. Unit tests
-  - add a controller
-  - write a test
-  - write the code
-1. Edge Cases - faker.js
+## Edge Cases
+
   - new business requirement
   - let's write some fixtures!
+  - not writing any errors
 
 ## 12pm to 2pm
 
