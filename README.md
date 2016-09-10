@@ -741,15 +741,74 @@ Add a route to return all users created after a certain date. Let's add a helper
 Steps:
 
 1. Write a unit test
-1. Run the tests
+1. Run the tests (the unit test should fail)
 1. Write the code to pass the unit test
-1. Run the tests
+1. Run the tests (all should pass!)
 
-## Edge Cases
+### Write a unit test
 
-  - new business requirement
-  - let's write some fixtures!
-  - not writing any errors
+Create a new file called *controllers.users.test.js* within the "test/unit/" directory:
+
+```javascript
+process.env.NODE_ENV = 'test';
+
+const chai = require('chai');
+const should = chai.should();
+
+const usersController = require('../../src/server/controllers/users');
+
+describe('controllers : users', () => {
+
+  describe('filterByYear()', () => {
+    // add code here
+  });
+
+});
+```
+
+Now add the body of the test:
+
+```javascript
+const userArray = [
+  {
+    id: 1,
+    username: 'michael',
+    email: 'michael@mherman.org',
+    created_at: '2016-09-10T16:44:28.015Z'
+  },
+  {
+    id: 2,
+    username: 'mike',
+    email: 'mike@mherman.org',
+    created_at: '2015-09-10T16:44:28.015Z'
+  },
+  {
+    id: 3,
+    username: 'mike',
+    email: 'mike@mherman.org',
+    created_at: '2014-09-10T16:44:28.015Z'
+  }
+];
+it('should return all users created on or after (>=) specified year',
+(done) => {
+  usersController.filterByYear(userArray, 2015, (err, total) => {
+    should.not.exist(err);
+    total.length.should.eql(2);
+    done();
+  });
+});
+```
+
+What's happening?
+
+## Fixture
+
+1. install faker
+1. create a helper script
+1. write the code
+1. write a new test
+
+npm install faker@3.1.0 --save-dev
 
 ## 12pm to 2pm
 
