@@ -81,20 +81,33 @@ describe('routes : users', () => {
     });
   });
 
-  // describe('POST /api/v1/users', () => {
-  //   it('should add a new user', (done) => {
-  //     chai.request(server)
-  //     .post('/api/v1/users')
-  //     .end((err, res) => {
-  //       should.not.exist(err);
-  //       res.redirects.length.should.equal(0);
-  //       res.status.should.equal(200);
-  //       res.type.should.equal('application/json');
-  //       res.body.status.should.eql('success');
-  //       res.body.data.length.should.eql(0);
-  //       done();
-  //     });
-  //   });
-  // });
+  describe('POST /api/v1/users', () => {
+    it('should respond with a success message along with a single user that was added', (done) => {
+      chai.request(server)
+      .post('/api/v1/users')
+      .send({
+        username: 'ryan',
+        email: 'ryan@ryan.com'
+      })
+      .end((err, res) => {
+        // there should be no errors
+        should.not.exist(err);
+        // there should be a 201 status code
+        // (indicating that something was "created")
+        res.status.should.equal(201);
+        // the response should be JSON
+        res.type.should.equal('application/json');
+        // the JSON response body should have a
+        // key-value pair of {"status": "success"}
+        res.body.status.should.eql('success');
+        // the JSON response body should have a
+        // key-value pair of {"data": 1 user object}
+        res.body.data[0].should.include.keys(
+          'id', 'username', 'email', 'created_at'
+        );
+        done();
+      });
+    });
+  });
 
 });

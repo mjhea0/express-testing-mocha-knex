@@ -3,6 +3,7 @@ const router = express.Router();
 
 const knex = require('../db/knex');
 
+// *** GET ALL users *** //
 router.get('/', (req, res, next) => {
   knex('users').select('*')
   .then((users) => {
@@ -19,6 +20,7 @@ router.get('/', (req, res, next) => {
   });
 });
 
+// *** GET SINGLE user *** //
 router.get('/:id', (req, res, next) => {
   const userID = parseInt(req.params.id);
   knex('users')
@@ -33,6 +35,31 @@ router.get('/:id', (req, res, next) => {
     });
   })
   .catch((err) => {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+
+// *** add a user *** //
+router.post('/', (req, res, next) => {
+  const newUsername = req.body.username;
+  const newEmail = req.body.email;
+  knex('users')
+  .insert({
+    username: newUsername,
+    email: newEmail
+  })
+  .returning('*')
+  .then((user) => {
+    res.status(201).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) => {
+    console.log(err);
     res.status(500).json({
       status: 'error',
       data: err
