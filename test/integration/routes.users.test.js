@@ -110,4 +110,44 @@ describe('routes : users', () => {
     });
   });
 
+  describe('PUT /api/v1/users', () => {
+    it('should respond with a success message along with a single user that was updated', (done) => {
+      knex('users')
+      .select('*')
+      .then((user) => {
+        const userObject = user[0];
+        chai.request(server)
+        .put(`/api/v1/users/${userObject.id}`)
+        .send({
+          username: 'updatedUser',
+          email: 'updated@user.com'
+        })
+        .end((err, res) => {
+          // there should be no errors
+          should.not.exist(err);
+          // there should be a 200 status code
+          res.status.should.equal(200);
+          // the response should be JSON
+          res.type.should.equal('application/json');
+          // the JSON response body should have a
+          // key-value pair of {"status": "success"}
+          res.body.status.should.eql('success');
+          // the JSON response body should have a
+          // key-value pair of {"data": 1 user object}
+          res.body.data[0].should.include.keys(
+            'id', 'username', 'email', 'created_at'
+          );
+          // ensure the user was in fact updated
+          var newUserObject = res.body.data[0];
+          newUserObject.username.should.not.eql(userObject.username);
+          newUserObject.email.should.not.eql(userObject.email);
+          // redundant
+          newUserObject.username.should.eql('updatedUser');
+          newUserObject.email.should.eql('updated@user.com');
+          done();
+        });
+      });
+    });
+  });
+
 });
