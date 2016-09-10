@@ -740,8 +740,6 @@ Add a route to return all users created after a certain date. Let's add a helper
 
 Steps:
 
-1. Write the integration test
-1. Run the tests
 1. Write a unit test
 1. Run the tests
 1. Write the code to pass the unit test
