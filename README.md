@@ -569,6 +569,7 @@ Code:
   - write a test
   - write the code
 1. Edge Cases - faker.js
+  - new business requirement
   - let's write some fixtures!
 
 ## 12pm to 2pm
