@@ -1,6 +1,6 @@
 # Testing Node and Express
 
-This tutorial looks at how to test an [Express](https://expressjs.com/) CRUD app with [Mocha](http://mochajs.org/) and [Chai](http://chaijs.com/). Although we'll be writing both [unit and integration tests](http://stackoverflow.com/questions/5357601/whats-the-difference-between-unit-tests-and-integration-tests), the focus will be on the latter so that tests run against the database in order to test the full functionality of our app. Postgres will be used, but feel free to use your favorite relational database.
+This tutorial looks at how to test an [Express](https://expressjs.com/) CRUD app with [Mocha](http://mochajs.org/) and [Chai](http://chaijs.com/). Although we'll be writing both [unit and integration tests](http://stackoverflow.com/questions/5357601/whats-the-difference-between-unit-tests-and-integration-tests), the focus will be on the latter so that the tests run against the database in order to test the full functionality of our app. Postgres will be used, but feel free to use your favorite relational database.
 
 Let's get to it!
 
@@ -8,19 +8,45 @@ Let's get to it!
 
 By the end of this tutorial, you will be able to...
 
+1. Discuss the benefits of automating tests
+1. Set up a project with knex.js
+1. Write schema migration files with knex to create new database tables
+1. Generate [database seed](https://en.wikipedia.org/wiki/Database_seeding) files with knex and apply the seeds to the database
+1. Utilize the knex methods to perform the basic CRUD functions on a RESTful resource
+1. Set up the testing structure with Mocha and Chai
+1. Write integration tests
+1. Write unit tests
+1. Write tests, and then write just enough code to pass the tests
+1. Create [Express routes](https://expressjs.com/en/guide/routing.html)
+1. Practice test driven development
+1. Create a CRUD app, following RESTful best practices
+1. Generate fake test data ([test fixtures](https://en.wikipedia.org/wiki/Test_fixture)) with [faker.js](https://github.com/marak/Faker.js/)
+
+
+
+1. Generate a Swagger Spec based on an existing RESTful API developed with Node, Express, and Postgres
+1. Set up the Swagger UI for testing and interacting with the API
+
 ## Why Test?
 
 Are you currently manually testing your app?
 
-When you push new code do you manually test all features in your app to ensure the new code doesn't break existing functionality? How about when you're fixing a bug? Do you manually test your app? How many times?
+When you push new code do you manually test all features in your app to ensure the new code doesn't break existing functionality? How about when you're fixing a bug? Do you manually test your app? How many times - ten, twenty, thirty?
 
 Stop wasting time!
 
 If you do any sort of manual testing write an automated test instead. Your future self will thank you.
 
+Need more convincing? Testing...
+
+1. Helps break down problems into manageable pieces
+1. Forces you to write cleaner code
+1. Prevents overcoding
+1. Let's you sleep at night (because you *actually* know that your code works)
+
 ## Getting Started
 
-### Project Set Up
+### Project Setup
 
 To quickly create an app boilerplate install the following [generator](https://www.npmjs.com/package/generator-galvanize-express):
 
@@ -40,11 +66,9 @@ Create a new project directory, and then run the generator to scaffold a new app
 $ yo galvanize-express
 ```
 
-> **NOTE:** Add your name for the MIT License and do not add Gulp Notify.
+> **NOTE:** Add your name for the MIT License and opt not to add Gulp Notify.
 
-Make sure to review the structure.
-
-Install the dependencies:
+Open the project in your favorite text editor, and then review the project structure as the dependencies are installed:
 
 ```sh
 $ npm install
@@ -63,7 +87,7 @@ Welcome to Express!
 The sum is 3
 ```
 
-### Database Set Up
+### Database Setup
 
 Make sure the Postgres database server is running, and then create two new databases in [psql](http://postgresguide.com/utilities/psql.html), for development and testing:
 
@@ -108,9 +132,9 @@ module.exports = {
 };
 ```
 
-Here, different database configuration is used based on the app's environment, either `development` or `test`. The [environment variable](https://en.wikipedia.org/wiki/Environment_variable) `NODE_ENV` will be used to change the environment. `NODE_ENV` defaults to `development`, so when we run test, we'll need to update the variable to `test`.
+Here, different database configuration is used based on the app's environment, either `development` or `test`. The [environment variable](https://en.wikipedia.org/wiki/Environment_variable) `NODE_ENV` is used to change the environment. `NODE_ENV` defaults to `development`, so when we run our tests, we'll need to update the variable to `test` in order to pull in the proper config.
 
-Next, let's init the connection. Create a new folder with "server" called "db" and then add a file called *knex.js*:
+Next, let's init the database connection. Create a new folder within "server" called "db" and then add a file called *knex.js*:
 
 ```javascript
 const environment = process.env.NODE_ENV;
@@ -118,13 +142,13 @@ const config = require('../../../knexfile.js')[environment];
 module.exports = require('knex')(config);
 ```
 
-The database connection is establish by passing the proper environment to *knexfile.js* which returns the associated object that gets passed to the `knex` library in the third line above.
+The database connection is established by passing the proper environment (via the environment variable `NODE_ENV`) to *knexfile.js* which returns the associated object that is passed to the `knex` library in the third line above.
 
-> Now is a great time to initilize a new git repo and commit!
+> **NOTE**: Now is a great time to init a new git repo and make your first commit!
 
 ### Test Structure
 
-With that complete, let's look at the current test structure. In the "src" directory, you'll notice a "test" directory, which as you probably guessed contains the test specs. Two sample tests have been created, plus there is some basic configuration set up for [JSHint](https://github.com/jshint/jshint) and [JSCS](http://jscs.info/).
+With that complete, let's look at the current test structure. In the "src" directory, you'll notice a "test" directory, which as you probably guessed contains the test specs. Two sample tests have been created, plus there is some basic configuration set up for [JSHint](https://github.com/jshint/jshint) and [JSCS](http://jscs.info/) so that the code is linted against the style config and conventions defined in the *.jscsrc*  and *jshintrc* files, respectively.
 
 Run the tests:
 
@@ -156,17 +180,17 @@ controllers : index
 6 passing (724ms)
 ```
 
-Glance at the sample tests. Notice how we are updating the environment variable at the top of each test:
+Glance at the sample tests. Notice how we updated the environment variable at the top of each test:
 
 ```javascript
 process.env.NODE_ENV = 'test';
 ```
 
-Remember what this does? Now, when we run the tests, knex is intilized with the `test` config.
+Remember what this does? Scroll back up to the previous section if you forgot. Now, when we run the tests, knex is intilized with the `test` config.
 
 ### Schema Migrations
 
-To keep the code simple, let's use one CRUD resource, `users`:
+To keep the code simple, let's use one CRUD resource - `users`:
 
 | Endpoint  | HTTP   | Result               |
 |-----------|--------|----------------------|
@@ -176,13 +200,13 @@ To keep the code simple, let's use one CRUD resource, `users`:
 | users/:id | PUT    | update a single user |
 | users/:id | DELETE | delete a single user |
 
-Init a new migration:
+Init a new knex migration:
 
 ```sh
 $ knex migrate:make users
 ```
 
-This command created a new migration file within the "src/server/db/migrations" folder. Now we can create the table along with the individual fields:
+This command created a new migration file in the "src/server/db/migrations" folder. Now we can create the table along with the individual fields:
 
 | Field Name  | Data Type | Constraints                                 |
 |-------------|-----------|---------------------------------------------|
@@ -236,7 +260,7 @@ You are now connected to database "express_tdd".
 
 ## Seed
 
-We need to see the database to have some basic data to work with. Init a new seed, which will add a new seed file to "src/server/db/seeds/":
+We need to [seed](https://en.wikipedia.org/wiki/Database_seeding) the database to add dummy data to the database so we have something to work with. Init a new seed, which will add a new seed file to "src/server/db/seeds/":
 
 ```sh
 $ knex seed:make users
@@ -288,9 +312,9 @@ Set up complete.
 We'll be taking a test first approach to development, roughly following these steps for each endpoint:
 
 1. Write test
-1. Run the test - it should fail
+1. Run the test (it should fail)
 1. Write code
-1. Run the test - it should pass
+1. Run the test (it should pass)
 
 Start by thinking about the expected input (JSON payload) and output (JSON object) for each RESTful endpoint:
 
@@ -395,7 +419,7 @@ describe('GET /api/v1/users', () => {
 });
 ```
 
-Take note of the inline code comments. Run the test to make sure it fails. Now write the code to get the test pass, following these steps:
+Take note of the inline code comments. Need more explanation? Read over [Testing Node.js With Mocha and Chai](http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai/#.V9W8aJMrJE4). Run the test to make sure it fails. Now write the code to get the test pass, following these steps:
 
 #### Update the route config (src/server/config/route-config.js)
 
@@ -419,11 +443,11 @@ Take note of the inline code comments. Run the test to make sure it fails. Now w
 })(module.exports);
 ```
 
-Now we have a new set of routes set up that we can use within *src/server/routes/users.js* which we need to set up...
+Now we have a new set of routes set up that we can use within *src/server/routes/users.js*, which we need to add...
 
 #### Set up new routes
 
-Create the *users.js* file in "src/server/routes/", and then add in route boilerplate:
+Create the *users.js* file in "src/server/routes/", and then add in the route boilerplate:
 
 ```javascript
 const express = require('express');
@@ -434,7 +458,7 @@ const knex = require('../db/knex');
 module.exports = router;
 ```
 
-Now we can add in the route handler:
+Now we can add in the route handler with the knex methods for retrieving all users from the `users` table:
 
 ```javascript
 router.get('/', (req, res, next) => {
@@ -744,7 +768,7 @@ Steps:
 
 1. Write a unit test
 1. Run the tests (the unit test should fail)
-1. Write the code to pass the unit test
+1. Write the code to pass the test
 1. Run the tests (all should pass!)
 
 ### Write a unit test
@@ -803,7 +827,7 @@ it('should return all users created on or after (>=) specified year',
 
 #### What's happening?
 
-Within the `it` block we passed in the `userArray`, a year, and a callback function to a function called `filterByYear`. This then asserts that a error does not exist and that the length of the response (`total`) is 2.
+Within the `it` block we passed in the `userArray`, a year, and a callback function to a function called `filterByYear()`. This then asserts that a error does not exist and that the length of the response (`total`) is 2.
 
 Run the tests. Watch them fail. Add the code...
 
@@ -825,16 +849,16 @@ module.exports = {
 };
 ```
 
-Confused? Add an inline comment above each line, describing what the code does and, in some cases, why the code does what it does.
+Confused? Add an inline comment above each line, describing *what* the code does and, in some cases, *why* the code does what it does.
 
 Run the tests. Do they pass? They should.
 
-Now you can use that function in a new route to finish the business requirement. Do this on your own. Write the integration test first!
+Now you can use that function in a new route to finish the business requirement. Do this on your own. Be sure to write the integration test first!
 
 ## Fixtures
 
 [faker.js](https://github.com/marak/Faker.js/) is a powerful library for generating fake data. In our case, we can use faker to generate test data
-for our unit tests. Such data is often called a test [fixture](https://en.wikipedia.org/wiki/Test_fixture).
+for our unit tests. Such data is often called a [test fixture](https://en.wikipedia.org/wiki/Test_fixture).
 
 Install faker:
 
@@ -844,7 +868,7 @@ npm install faker@3.1.0 --save-dev
 
 ### Code
 
-Since we really don't know what the test is going to look like, let's start with writing a quick script to generate test data. Create a new file with the "test" directory called *generate.test.date.js*, and then add the following code to it:
+Since we don't really (or maybe *really* don't?) know what the test is going to look like, let's start with writing a quick script to generate test data. Create a new file within the "test" directory called *generate.test.date.js*, and then add the following code to it:
 
 ```javascript
 const faker = require('faker');
@@ -864,7 +888,7 @@ function createUserObject(
 }
 ```
 
-This function generates an array of user objects, each object is generated randomly using faker.js methods. We could use that data directly in the test, but let's first save the data to a fixture file for easy use. Update the file like so:
+This function generates an array of user objects, each object is generated randomly using faker.js [methods](https://github.com/marak/Faker.js/#api). We could use that data directly in the test, but let's first save the data to a fixture file for easy use. Update the file like so:
 
 ```javascript
 const faker = require('faker');
@@ -905,8 +929,8 @@ createUserObject(2010, 2014, 10, (err, beforeDates) => {
 
 Now we can generate two arrays -
 
-1. One with data before a specific date
-1. The other with data on or after a that specific date
+1. One with data *before* a specific date
+1. The other with data *on or after* that specific date
 
 Before saving to a file, we concatenated the two arrays into one. You'll see why this was necessary when the test is created. For now, run the script from the project root:
 
@@ -914,7 +938,7 @@ Before saving to a file, we concatenated the two arrays into one. You'll see why
 $ node test/generate.test.data.js
 ```
 
-You should a new fixture file called *test.data.json* in the "test" folder. The data in this file can now be used in a test.
+You should see a new fixture file called *test.data.json* in the "test" folder. The data in this file can now be used in a test.
 
 ### Test
 
@@ -1166,3 +1190,7 @@ const userQueries = require('../db/queries.users');
 Run the tests again. They should all still pass! Notice how we were able to refactor with confidence since we had proper test coverage. We would know immediately if the refactor broke something. Finish refactoring out all of the knex logic to *queries.users.js*. Test again when done.
 
 ## Conclusion
+
+With testing, alot of this becomes repetition. Try going to one of your previous CRUD apps and setting up a test folder to test out your routes.
+
+Look back to the objectives...
