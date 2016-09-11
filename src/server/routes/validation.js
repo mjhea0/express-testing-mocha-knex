@@ -1,5 +1,7 @@
-function validate(req, res, next) {
-  if (req.method === 'POST') {
+function validateUserResources(req, res, next) {
+  if (req.method === 'GET') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+  } else if (req.method === 'POST') {
     req.checkBody('username', 'Username cannot be empty').notEmpty();
     req.checkBody('email', 'Must be a valid email').isEmail();
   } else if (req.method === 'PUT') {
@@ -7,8 +9,6 @@ function validate(req, res, next) {
     req.checkBody('username', 'Username cannot be empty').notEmpty();
     req.checkBody('email', 'Must be a valid email').isEmail();
   } else if (req.method === 'DELETE') {
-    req.checkParams('id', 'Must be valid').notEmpty().isInt();
-  } else if (req.method === 'GET') {
     req.checkParams('id', 'Must be valid').notEmpty().isInt();
   }
   const errors = req.validationErrors();
@@ -22,4 +22,4 @@ function validate(req, res, next) {
   }
 }
 
-module.exports = validate;
+module.exports = validateUserResources;

@@ -734,8 +734,6 @@ router.delete('/:id', (req, res, next) => {
 
 Run all your tests. All should pass.
 
-Keep in mind that we are not running any tests to handle errors. For examples, what happens if you pass an invalid email into the POST request? Or if you provide an invalid ID to the PUT request. Think about edge cases. Then write tests. Do this on your own.
-
 ## Unit Tests
 
 New business requirement!
@@ -807,35 +805,300 @@ it('should return all users created on or after (>=) specified year',
 
 Within the `it` block we passed in the `userArray`, a year, and a callback function to a function called `filterByYear`. This then asserts that a error does not exist and that the length of the response (`total`) is 2.
 
-Run the tests. Watch them fail.
-
-Now, let's add the code!
+Run the tests. Watch them fail. Add the code...
 
 ### Write the code to pass the unit test
 
-Blah
+Create a new controller within "src/server/controllers" called *users.js*:
 
-## Fixture
+```javascript
+function filterByYear(arrayOfUsers, year, callback) {
+  const response = arrayOfUsers.filter((user) => {
+    const date = new Date(user.created_at);
+    return date.getFullYear() >= year;
+  });
+  callback(null, response);
+}
 
-1. install faker
-1. create a helper script
-1. write the code
-1. write a new test
+module.exports = {
+  filterByYear
+};
+```
 
+Confused? Add an inline comment above each line, describing what the code does and, in some cases, why the code does what it does.
+
+Run the tests. Do they pass? They should.
+
+Now you can use that function in a new route to finish the business requirement. Do this on your own. Write the integration test first!
+
+## Fixtures
+
+[faker.js](https://github.com/marak/Faker.js/) is a powerful library for generating fake data. In our case, we can use faker to generate test data
+for our unit tests. Such data is often called a test [fixture](https://en.wikipedia.org/wiki/Test_fixture).
+
+Install faker:
+
+```sh
 npm install faker@3.1.0 --save-dev
+```
+
+### Code
+
+Since we really don't know what the test is going to look like, let's start with writing a quick script to generate test data. Create a new file with the "test" directory called *generate.test.date.js*, and then add the following code to it:
+
+```javascript
+const faker = require('faker');
+
+function createUserObject(
+  yearOne, yearTwo, amountToCreate, callback) {
+  const userArray = [];
+  for (var i = 1; i <= amountToCreate; i++) {
+    userArray.push({
+      id: faker.random.uuid(),
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      created_at: faker.date.between(yearOne, yearTwo)
+    });
+  }
+  callback(null, userArray);
+}
+```
+
+This function generates an array of user objects, each object is generated randomly using faker.js methods. We could use that data directly in the test, but let's first save the data to a fixture file for easy use. Update the file like so:
+
+```javascript
+const faker = require('faker');
+const fs = require('fs');
+const path = require('path');
+
+function createUserObject(
+  yearOne, yearTwo, amountToCreate, callback) {
+  const userArray = [];
+  for (var i = 1; i <= amountToCreate; i++) {
+    userArray.push({
+      id: faker.random.uuid(),
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      created_at: faker.date.between(yearOne, yearTwo)
+    });
+  }
+  callback(null, userArray);
+}
+
+createUserObject(2010, 2014, 10, (err, beforeDates) => {
+  if (!err) {
+    createUserObject(2015, 2016, 5, (err, onOrAfterDates) => {
+      const userArray = beforeDates.concat(onOrAfterDates);
+      fs.writeFile(
+        path.join(__dirname, 'test.data.json'),
+        JSON.stringify(userArray, null, 2),
+        (err) => {
+        if (!err) {
+          return true;
+        }
+      });
+    });
+  }
+  return false;
+});
+```
+
+Now we can generate two arrays -
+
+1. One with data before a specific date
+1. The other with data on or after a that specific date
+
+Before saving to a file, we concatenated the two arrays into one. You'll see why this was necessary when the test is created. For now, run the script from the project root:
+
+```sh
+$ node test/generate.test.data.js
+```
+
+You should a new fixture file called *test.data.json* in the "test" folder. The data in this file can now be used in a test.
+
+### Test
+
+Add the following test to *controllers.users.test.js*:
+
+```javascript
+describe('filterByYear() with helper', () => {
+  it('should return all users created on or after (>=) specified year',
+  (done) => {
+    const testDataFile = path.join(
+      __dirname, '..', 'test.data.json');
+    fs.readFile(testDataFile, 'utf8', (err, data) => {
+      usersController.filterByYear(
+        JSON.parse(data), 2015, (err, total) => {
+        should.not.exist(err);
+        total.length.should.eql(5);
+        done();
+      });
+    });
+  });
+});
+```
+
+Make sure to require in `fs` and `path` at the top:
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+```
+
+Run the tests again!
 
 ## Validation
 
-npm install express-validator@2.20.8 --save
+Thus far we have not tested for errors. For example, what happens if the email address provided with a POST request in not properly formatted? Or if an invalid ID is used with a PUT request?
 
+We can start by validating parameters with [express-validator](https://github.com/ctavan/express-validator).
+
+### Install
+
+```sh
+$ npm install express-validator@2.20.8 --save
+```
+
+Then add the `require` to the top of *src/server/config/main-config.js*:
+
+```javascript
 const expressValidator = require('express-validator');
+```
 
-app.use(expressValidator([options]));
+Then mount the validator to the app middleware just below the body parser middleware:
 
+```javascript
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(expressValidator());
+```
 
-1. Refactoring
+### Test
+
+Add the first test to the `GET /api/v1/users/:id'` describe block:
+
+```javascript
+it('should throw an error if the user id is null', (done) => {
+  chai.request(server)
+  .get(`/api/v1/users/${null}`)
+  .end((err, res) => {
+    res.status.should.equal(400);
+    res.body.message.should.eql('Validation failed');
+    res.body.failures.length.should.eql(1);
+    done();
+  });
+});
+```
+
+Then add the second test to the `POST /api/v1/users` describe block:
+
+```javascript
+it('should throw an error when a username is not provided', (done) => {
+  chai.request(server)
+  .post('/api/v1/users')
+  .send({
+    username: null,
+    email: '111111'
+  })
+  .end((err, res) => {
+    res.status.should.equal(400);
+    res.body.message.should.eql('Validation failed');
+    res.body.failures.length.should.eql(2);
+    // ensure the user was not added
+    knex('users')
+    .select('*')
+    .where({
+      email: '111111'
+    })
+    .then((user) => {
+      user.length.should.eql(0);
+      done();
+    });
+  });
+});
+```
+
+### Code
+
+To add the proper validation, create a new file called *validation.js* within the "routes" directory:
+
+```javascript
+function validateUserResources(req, res, next) {
+  if (req.method === 'GET') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+  } else if (req.method === 'POST') {
+    req.checkBody('username', 'Username cannot be empty').notEmpty();
+    req.checkBody('email', 'Must be a valid email').isEmail();
+  } else if (req.method === 'PUT') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+    req.checkBody('username', 'Username cannot be empty').notEmpty();
+    req.checkBody('email', 'Must be a valid email').isEmail();
+  } else if (req.method === 'DELETE') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+  }
+  const errors = req.validationErrors();
+  if (errors) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      failures: errors
+    });
+  } else {
+    return next();
+  }
+}
+
+module.exports = validateUserResources;
+```
+
+Here, with express-validator, we validated parameters using either `req.checkParams` or `req.checkBody` and then aggregated them together with `req.validationErrors()`.
+
+Test! All should pass:
+
+```
+jscs
+  ✓ should pass for working directory (633ms)
+
+routes : index
+  GET /
+    ✓ should render the index (71ms)
+  GET /404
+    ✓ should throw an error
+
+routes : users
+  GET /api/v1/users
+    ✓ should respond with all users (53ms)
+  GET /api/v1/users/:id
+    ✓ should respond with a single user
+    ✓ should throw an error if the user id is null
+  POST /api/v1/users
+    ✓ should respond with a success message along with a single user that was added (129ms)
+    ✓ should throw an error when a username is not provided
+  PUT /api/v1/users/:id
+    ✓ should respond with a success message along with a single user that was updated
+  DELETE /api/v1/users/:id
+    ✓ should respond with a success message along with a single user that was deleted
+
+jshint
+  ✓ should pass for working directory (661ms)
+
+controllers : index
+  sum()
+    ✓ should return a total
+    ✓ should return an error
+
+controllers : users
+  filterByYear()
+    ✓ should return all users created on or after (>=) specified year
+  filterByYear() with helper
+    ✓ should return all users created on or after (>=) specified year
+
+15 passing (3s)
+```
+
+We are still not handling all errors. What else could go wrong? Think about edge cases. Then write tests. Do this on your own.
+
+## Refactor
   - making it modular w/ https://github.com/vitaly-t/pg-promise-demo
   - move knex logic to controller
   - move validation to the controller
   - add queries file
-  
