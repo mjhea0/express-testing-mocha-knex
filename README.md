@@ -1052,9 +1052,24 @@ module.exports = validateUserResources;
 
 Here, with express-validator, we validated parameters using either `req.checkParams` or `req.checkBody` and then aggregated them together with `req.validationErrors()`.
 
-Test! All should pass:
+Require this module into the user routes:
 
+```javascript
+const userQueries = require('../db/queries.users');
 ```
+
+Add the `validateUserResources` to all the route handlers except the handler to GET ALL users, like so:
+
+```javascript
+// *** GET SINGLE user *** //
+router.get('/:id',
+  validate.validateUserResources,
+  (req, res, next) => {
+```
+
+Finish the remaining rout handlers and the run the tests. All should pass:
+
+```sh
 jscs
   ✓ should pass for working directory (633ms)
 
@@ -1098,7 +1113,56 @@ controllers : users
 We are still not handling all errors. What else could go wrong? Think about edge cases. Then write tests. Do this on your own.
 
 ## Refactor
-  - making it modular w/ https://github.com/vitaly-t/pg-promise-demo
-  - move knex logic to controller
-  - move validation to the controller
-  - add queries file
+
+Finally, let's make our code a bit more modular by refactoring out unnecessary logic from the route handlers.
+
+Within the "db" folder, add a file called *queries.users.js*:
+
+```javascript
+const knex = require('./knex');
+
+function getAllUsers(callback) {
+  return knex('users').select('*')
+  .then((users) => {
+    callback(null, users);
+  })
+  .catch((err) => {
+    callback(err);
+  });
+}
+
+module.exports = {
+  getAllUsers
+};
+```
+
+This function now handles all the knex logic, and it can now be called anywhere in the project. Be sure to update the route handler:
+
+```javascript
+// *** GET ALL users *** //
+router.get('/', (req, res, next) => {
+  userQueries.getAllUsers((err, users) => {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: users
+      });
+    }
+  });
+});
+```
+
+Don't forget to add the requirement:
+
+```javascript
+const userQueries = require('../db/queries.users');
+```
+
+Run the tests again. They should all still pass! Notice how we were able to refactor with confidence since we had proper test coverage. We would know immediately if the refactor broke something. Finish refactoring out all of the knex logic to *queries.users.js*. Test again when done.
+
+## Conclusion

@@ -22,4 +22,6 @@ function validateUserResources(req, res, next) {
   }
 }
 
-module.exports = validateUserResources;
+module.exports = {
+  validateUserResources
+};

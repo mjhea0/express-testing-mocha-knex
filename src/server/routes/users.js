@@ -22,7 +22,9 @@ router.get('/', (req, res, next) => {
 });
 
 // *** GET SINGLE user *** //
-router.get('/:id', validate, (req, res, next) => {
+router.get('/:id',
+  validate.validateUserResources,
+  (req, res, next) => {
   const userID = parseInt(req.params.id);
   userQueries.getSingleUser(userID, (err, users) => {
     if (err) {
