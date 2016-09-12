@@ -21,6 +21,7 @@ By the end of this tutorial, you will be able to...
 1. Practice test driven development
 1. Create a CRUD app, following RESTful best practices
 1. Generate fake test data ([test fixtures](https://en.wikipedia.org/wiki/Test_fixture)) with [faker.js](https://github.com/marak/Faker.js/)
+1. Validate request parameters with [express-validator](https://github.com/ctavan/express-validator)
 
 
 
@@ -973,7 +974,7 @@ Run the tests again!
 
 ## Validation
 
-Thus far we have not tested for errors. For example, what happens if the email address provided with a POST request in not properly formatted? Or if an invalid ID is used with a PUT request?
+Thus far we have not tested for possible errors. For example, what happens if the email address provided with a POST request is not properly formatted? Or if an invalid ID is used with a PUT request?
 
 We can start by validating parameters with [express-validator](https://github.com/ctavan/express-validator).
 
@@ -983,13 +984,13 @@ We can start by validating parameters with [express-validator](https://github.co
 $ npm install express-validator@2.20.8 --save
 ```
 
-Then add the `require` to the top of *src/server/config/main-config.js*:
+Then `require` the module at the top of *src/server/config/main-config.js*:
 
 ```javascript
 const expressValidator = require('express-validator');
 ```
 
-Then mount the validator to the app middleware just below the body parser middleware:
+Mount the validator to the app middleware just below the body parser:
 
 ```javascript
 app.use(bodyParser.json());
@@ -1014,7 +1015,7 @@ it('should throw an error if the user id is null', (done) => {
 });
 ```
 
-Then add the second test to the `POST /api/v1/users` describe block:
+Add the second test to the `POST /api/v1/users` describe block:
 
 ```javascript
 it('should throw an error when a username is not provided', (done) => {
@@ -1074,9 +1075,9 @@ function validateUserResources(req, res, next) {
 module.exports = validateUserResources;
 ```
 
-Here, with express-validator, we validated parameters using either `req.checkParams` or `req.checkBody` and then aggregated them together with `req.validationErrors()`.
+Here, with express-validator, parameters are validated using either `req.checkParams` or `req.checkBody` and then errors are aggregated together with `req.validationErrors()`.
 
-Require this module into the user routes:
+Require this module in the user routes:
 
 ```javascript
 const userQueries = require('../db/queries.users');
@@ -1089,11 +1090,13 @@ Add the `validateUserResources` to all the route handlers except the handler to 
 router.get('/:id',
   validate.validateUserResources,
   (req, res, next) => {
+    ...
+  })
 ```
 
-Finish the remaining rout handlers and the run the tests. All should pass:
+Finish the remaining route handlers, and then run the tests. All should pass:
 
-```sh
+```shell
 jscs
   ✓ should pass for working directory (633ms)
 
@@ -1160,7 +1163,7 @@ module.exports = {
 };
 ```
 
-This function now handles all the knex logic, and it can now be called anywhere in the project. Be sure to update the route handler:
+This function now handles all the knex logic, and it can now be used anywhere in the project. Be sure to update the route handler:
 
 ```javascript
 // *** GET ALL users *** //
@@ -1187,10 +1190,12 @@ Don't forget to add the requirement:
 const userQueries = require('../db/queries.users');
 ```
 
-Run the tests again. They should all still pass! Notice how we were able to refactor with confidence since we had proper test coverage. We would know immediately if the refactor broke something. Finish refactoring out all of the knex logic to *queries.users.js*. Test again when done.
+Run the tests again. They all should still pass! Notice how we were able to refactor with confidence (without fear of the code breaking) since we had proper test coverage. Finish refactoring out all of the knex logic to *queries.users.js*. Test again when done.
 
 ## Conclusion
 
-With testing, alot of this becomes repetition. Try going to one of your previous CRUD apps and setting up a test folder to test out your routes.
+Turn back to the objectives. Read each aloud to yourself. Can you put each one into action?
 
-Look back to the objectives...
+The testing process may seem daunting and unnecessary at first, but you will soon just how necessary they are as your projects grow and become more complex. Continue to practice testing by incorporating tests whenever you begin a new project.
+
+The full code can be found in the [express-testing-mocha-knex](https://github.com/mjhea0/express-testing-mocha-knex) repository.
