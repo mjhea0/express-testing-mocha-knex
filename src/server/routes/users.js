@@ -42,7 +42,9 @@ router.get('/:id',
 });
 
 // *** add a user *** //
-router.post('/', validate, (req, res, next) => {
+router.post('/',
+  validate.validateUserResources,
+  (req, res, next) => {
   const userObject = {
     username: req.body.username,
     email: req.body.email
@@ -63,7 +65,9 @@ router.post('/', validate, (req, res, next) => {
 });
 
 // *** update a user *** //
-router.put('/:id', validate, (req, res, next) => {
+router.put('/:id',
+  validate.validateUserResources,
+  (req, res, next) => {
   const userID = parseInt(req.params.id);
   const userObject = {
     username: req.body.username,
@@ -85,7 +89,9 @@ router.put('/:id', validate, (req, res, next) => {
 });
 
 // *** delete a user *** //
-router.delete('/:id', validate, (req, res, next) => {
+router.delete('/:id',
+  validate.validateUserResources,
+  (req, res, next) => {
   const userID = parseInt(req.params.id);
   userQueries.deleteUser(userID, (err, users) => {
     if (err) {
