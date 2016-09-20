@@ -7,7 +7,7 @@ Check out the [blog post](http://mherman.org/blog/2016/09/12/testing-node-and-ex
 ## Want to use this project?
 
 1. Fork/Clone
-1. Install dependecies - `npm install`
+1. Install dependencies - `npm install`
 1. Add a *.env* file
 1. Create two local Postgres databases - `express_tdd` and `express_tdd_testing`
 1. Migrate - `knex migrate:latest --env development`
